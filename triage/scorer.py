@@ -22,7 +22,7 @@ Exit code 0 on success, 1 on error.
 import json
 import sys
 
-SEVERITY_ORDER = ["NONE", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
+SEVERITY_ORDER = ["NONE", "INFO", "LOW", "MEDIUM", "HIGH", "CRITICAL"]
 
 
 def load_json(path: str):
@@ -100,8 +100,11 @@ def main() -> None:
     total_score = 0.0
     for case in expected_data:
         case_id = case.get("id", "")
-        output = output_by_id.get(case_id, {})
-        total_score += score_case(output, case)
+        if case_id not in output_by_id:
+            # No answer submitted for this case: no credit. Previously an absent
+            # case defaulted to severity "NONE" and scored 1.0 on clean contracts.
+            continue
+        total_score += score_case(output_by_id[case_id], case)
 
     final_score = total_score / total_cases
     print(f"{final_score:.4f}")
